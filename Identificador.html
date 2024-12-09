@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Identificador de Objetos con IA</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+    :root {
+      --primary-color: #1ed760;
+      --text-color: #ffffff;
+      --bg-color: #000000;
+      --card-bg-color: rgba(255, 255, 255, 0.1);
+      --grid-color: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Mono', monospace;
+      background-color: var(--bg-color);
+      background-image: 
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      color: var(--text-color);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background-color: var(--card-bg-color);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: var(--bg-color);
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      font-size: 16px;
+      opacity: 0.8;
+      margin-bottom: 20px;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .input-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      background-color: var(--primary-color);
+      color: var(--bg-color);
+      border: none;
+      padding: 12px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 16px;
+      font-family: 'Space Mono', monospace;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background-color: #1bc255;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    #preview {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 6px;
+      display: none;
+      margin-bottom: 20px;
+    }
+
+    #output {
+      background-color: var(--card-bg-color);
+      border-radius: 6px;
+      padding: 15px;
+      font-size: 16px;
+      display: none;
+      margin-top: 20px;
+    }
+
+    .object-name {
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 5px;
+    }
+
+    .object-description {
+      font-size: 14px;
+    }
+
+    .suggestion {
+      font-size: 14px;
+      color: #888;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    footer {
+      margin-top: 30px;
+      padding: 20px;
+      text-align: center;
+      border-top: 1px solid var(--grid-color);
+    }
+
+    footer a {
+      color: var(--primary-color);
+      text-decoration: none;
+      transition: opacity 0.3s ease;
+    }
+
+    footer a:hover {
+      opacity: 0.8;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        border-radius: 0;
+      }
+    }
+
+    .custom-cursor {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      mix-blend-mode: difference;
+      transition: width 0.3s, height 0.3s;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="custom-cursor"></div>
+  <div class="container">
+    <header>
+      <h1>Identificador de Objetos con IA</h1>
+      <p class="description">Analiza objetos en imágenes utilizando inteligencia artificial avanzada</p>
+    </header>
+    <div class="content">
+      <div class="input-section">
+        <button id="uploadBtn" class="btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Subir
+        </button>
+        <input type="file" id="fileInput" accept="image/*">
+        
+        <button id="captureBtn" class="btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          Capturar
+        </button>
+      </div>
+
+      <img id="preview" alt="Vista previa de la imagen">
+
+      <button id="analyzeBtn" class="btn" style="display: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Identificar objeto
+      </button>
+
+      <div id="output"></div>
+
+      <p class="suggestion">
+        Sugerencia: Para obtener mejores resultados, asegúrate de que la imagen contenga un solo objeto principal y evita incluir elementos que puedan interferir con el análisis.
+      </p>
+      <footer>
+        <p>© 2024 Todos los derechos reservados | <a href="https://www.instagram.com/andres.palaciio/" target="_blank" rel="noopener noreferrer">@andres.palaciio</a></p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const apiKey = "AIzaSyBQ16lUJyIltk2ciEIyYULw2CAYrfzo90A";
+    const uploadBtn = document.getElementById('uploadBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const output = document.getElementById('output');
+    const cursor = document.querySelector('.custom-cursor');
+
+    // Custom cursor
+    document.addEventListener('mousemove', (e) => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    });
+
+    document.addEventListener('mousedown', () => {
+      cursor.style.width = '15px';
+      cursor.style.height = '15px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      cursor.style.width = '20px';
+      cursor.style.height = '20px';
+    });
+
+    uploadBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          analyzeBtn.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    captureBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+
+        setTimeout(() => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d').drawImage(video, 0, 0);
+          stream.getTracks().forEach(track => track.stop());
+          preview.src = canvas.toDataURL('image/jpeg');
+          preview.style.display = 'block';
+          analyzeBtn.style.display = 'block';
+        }, 300);
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        alert('No se pudo acceder a la cámara. Por favor, asegúrate de que tienes una cámara conectada y has dado permiso para usarla.');
+      }
+    });
+
+    analyzeBtn.addEventListener('click', async () => {
+      if (!preview.src) {
+        alert("Por favor, sube o toma una foto primero.");
+        return;
+      }
+
+      output.innerHTML = `
+        <div style="display: flex; justify-content: center; align-items: center; height: 40px;">
+          <svg class="animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M16 12a4 4 0 1 1-8 0"/>
+          </svg>
+        </div>
+      `;
+      output.style.display = 'block';
+      analyzeBtn.disabled = true;
+
+      try {
+        const base64Image = preview.src.split(',')[1];
+        const response = await fetch(
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + apiKey,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: "Identifica el objeto de la imagen. Proporciona solo el nombre común y una breve descripción de no más de 40 palabras." },
+                    { inlineData: { mimeType: "image/jpeg", data: base64Image } }
+                  ]
+                }
+              ]
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+          const [name, ...descriptionParts] = data.candidates[0].content.parts[0].text.split(':');
+          const description = descriptionParts.join(':').trim();
+          output.innerHTML = `
+            <div class="object-name">${name}</div>
+            <div class="object-description">${description}</div>
+          `;
+        } else {
+          output.innerHTML = "No se pudo identificar el objeto. Por favor, inténtalo de nuevo con una imagen clara.";
+        }
+      } catch (error) {
+        console.error("Error al analizar la imagen:", error);
+        output.innerHTML = "Hubo un error al procesar la imagen. Por favor, inténtalo de nuevo más tarde.";
+      } finally {
+        analyzeBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
+
